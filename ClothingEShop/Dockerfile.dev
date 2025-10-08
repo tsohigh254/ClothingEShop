@@ -1,0 +1,19 @@
+# Development Dockerfile with hot reload support
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS development
+WORKDIR /app
+
+# Install dotnet tools
+RUN dotnet tool install --global dotnet-ef
+
+# Copy csproj and restore dependencies
+COPY ["ClothingEShop.csproj", "./"]
+RUN dotnet restore "ClothingEShop.csproj"
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 80
+
+# Entry point for development with hot reload
+CMD ["dotnet", "watch", "run", "--urls", "http://+:80"]

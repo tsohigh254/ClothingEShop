@@ -1,0 +1,28 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  clothingeshop-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS=false
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/bin
+      - /app/obj
+    command: dotnet watch run --urls http://+:80
+
+  postgres:
+    environment:
+      # Development database settings
+      POSTGRES_DB: clothingeshop_dev
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with local PostgreSQL

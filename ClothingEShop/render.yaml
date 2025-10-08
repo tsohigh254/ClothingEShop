@@ -1,0 +1,25 @@
+services:
+  # Web Service - Blazor Application
+  - type: web
+    name: clothingeshop-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: clothingeshop-db
+          property: connectionString
+
+databases:
+  # PostgreSQL Database
+  - name: clothingeshop-db
+    databaseName: clothingeshop
+    user: clothingeshop_user
+    plan: free
+    postgresMajorVersion: 15

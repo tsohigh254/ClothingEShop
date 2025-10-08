@@ -1,0 +1,47 @@
+# .NET
+bin/
+obj/
+out/
+TestResults/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Documentation
+README.md
+*.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node modules (if any)
+node_modules/
+
+# Database files
+*.db
+*.sqlite

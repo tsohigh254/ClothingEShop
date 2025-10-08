@@ -1,0 +1,296 @@
+@page "/products/create"
+@page "/products/edit/{id:int}"
+@using ClothingEShop.Models
+@using ClothingEShop.Services
+@using System.ComponentModel.DataAnnotations
+@inject IProductService ProductService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(IsEdit ? $"Edit {product?.Name}" : "Add New Product") - Clothing E-Shop</PageTitle>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/products">Products</a></li>
+                    @if (IsEdit && product != null)
+                    {
+                        <li class="breadcrumb-item"><a href="/products/@product.Id">@product.Name</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Edit</li>
+                    }
+                    else
+                    {
+                        <li class="breadcrumb-item active" aria-current="page">Add New</li>
+                    }
+                </ol>
+            </nav>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi @(IsEdit ? "bi-pencil" : "bi-plus-lg")"></i>
+                        @(IsEdit ? "Edit Product" : "Add New Product")
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    @if (isLoading && IsEdit)
+                    {
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading product...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (IsEdit && product == null)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Product not found.
+                            <a href="/products" class="alert-link">Go back to products</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="productForm" OnValidSubmit="HandleSubmit">
+                            <DataAnnotationsValidator />
+                            
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> @errorMessage
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(successMessage))
+                            {
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle"></i> @successMessage
+                                </div>
+                            }
+
+                            <div class="row">
+                                <!-- Product Name -->
+                                <div class="col-12 mb-3">
+                                    <label for="name" class="form-label">Product Name *</label>
+                                    <InputText id="name" class="form-control" @bind-Value="productForm.Name" 
+                                               placeholder="Enter product name" />
+                                    <ValidationMessage For="@(() => productForm.Name)" class="text-danger" />
+                                </div>
+
+                                <!-- Description -->
+                                <div class="col-12 mb-3">
+                                    <label for="description" class="form-label">Description *</label>
+                                    <InputTextArea id="description" class="form-control" @bind-Value="productForm.Description" 
+                                                   rows="4" placeholder="Enter product description" />
+                                    <ValidationMessage For="@(() => productForm.Description)" class="text-danger" />
+                                </div>
+
+                                <!-- Price -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="price" class="form-label">Price ($) *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <InputNumber id="price" class="form-control" @bind-Value="productForm.Price" 
+                                                     placeholder="0.00" step="0.01" />
+                                    </div>
+                                    <ValidationMessage For="@(() => productForm.Price)" class="text-danger" />
+                                </div>
+
+                                <!-- Image URL -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="imageUrl" class="form-label">Image URL</label>
+                                    <InputText id="imageUrl" class="form-control" @bind-Value="productForm.ImageUrl" 
+                                               placeholder="https://example.com/image.jpg" />
+                                    <ValidationMessage For="@(() => productForm.ImageUrl)" class="text-danger" />
+                                </div>
+
+                                <!-- Image Preview -->
+                                @if (!string.IsNullOrEmpty(productForm.ImageUrl))
+                                {
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">Image Preview</label>
+                                        <div class="text-center">
+                                            <img src="@productForm.ImageUrl" alt="Preview" 
+                                                 class="img-thumbnail" style="max-height: 200px; max-width: 100%;" 
+                                                 onerror="this.style.display='none'" />
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Action Buttons -->
+                                <div class="col-12">
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                                        <div>
+                                            <button type="button" class="btn btn-outline-secondary me-2" @onclick="Cancel">
+                                                <i class="bi bi-x-lg"></i> Cancel
+                                            </button>
+                                            <a href="/products" class="btn btn-outline-secondary">
+                                                <i class="bi bi-arrow-left"></i> Back to Products
+                                            </a>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                            @if (isSubmitting)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi @(IsEdit ? "bi-check-lg" : "bi-plus-lg")"></i>
+                                            }
+                                            @(IsEdit ? "Update Product" : "Create Product")
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    
+    private ProductFormModel productForm = new();
+    private Product? product;
+    private bool isLoading = false;
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    
+    private bool IsEdit => Id > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEdit)
+        {
+            await LoadProduct();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsEdit)
+        {
+            await LoadProduct();
+        }
+        else
+        {
+            productForm = new ProductFormModel();
+            product = null;
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        
+        try
+        {
+            product = await ProductService.GetProductByIdAsync(Id);
+            if (product != null)
+            {
+                productForm = new ProductFormModel
+                {
+                    Name = product.Name,
+                    Description = product.Description,
+                    Price = product.Price,
+                    ImageUrl = product.ImageUrl
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load product. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var productToSave = new Product
+            {
+                Name = productForm.Name,
+                Description = productForm.Description,
+                Price = productForm.Price,
+                ImageUrl = productForm.ImageUrl
+            };
+
+            if (IsEdit)
+            {
+                var updatedProduct = await ProductService.UpdateProductAsync(Id, productToSave);
+                if (updatedProduct != null)
+                {
+                    successMessage = "Product updated successfully!";
+                    await Task.Delay(1000); // Show success message briefly
+                    Navigation.NavigateTo($"/products/{Id}");
+                }
+                else
+                {
+                    errorMessage = "Failed to update product. Please try again.";
+                }
+            }
+            else
+            {
+                var createdProduct = await ProductService.CreateProductAsync(productToSave);
+                successMessage = "Product created successfully!";
+                await Task.Delay(1000); // Show success message briefly
+                Navigation.NavigateTo($"/products/{createdProduct.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = IsEdit ? "Failed to update product. Please try again." : "Failed to create product. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        if (IsEdit && product != null)
+        {
+            Navigation.NavigateTo($"/products/{product.Id}");
+        }
+        else
+        {
+            Navigation.NavigateTo("/products");
+        }
+    }
+
+    public class ProductFormModel
+    {
+        [Required(ErrorMessage = "Product name is required")]
+        [StringLength(100, ErrorMessage = "Product name cannot exceed 100 characters")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Product description is required")]
+        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
+        public string Description { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Price is required")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
+        public decimal Price { get; set; }
+
+        [Url(ErrorMessage = "Please enter a valid URL")]
+        public string? ImageUrl { get; set; }
+    }
+}
