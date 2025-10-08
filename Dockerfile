@@ -33,8 +33,9 @@ RUN mkdir -p /app/logs
 # Expose port 10000 for Render
 EXPOSE 10000
 
-# Set environment variable for port
+# Set environment variables
 ENV ASPNETCORE_URLS=http://+:10000
+ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Set the entry point
 ENTRYPOINT ["dotnet", "ClothingEShop.dll"]
