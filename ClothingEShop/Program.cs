@@ -64,7 +64,7 @@ app.UseCors();
 
 // Health check endpoints
 app.MapHealthChecks("/health");
-app.MapGet("/", () => "Clothing E-Shop API is running!");
+app.MapGet("/api/status", () => "Clothing E-Shop API is running!");
 
 // Map API controllers
 app.MapControllers();
